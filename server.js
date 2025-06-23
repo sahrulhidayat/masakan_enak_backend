@@ -3,13 +3,35 @@ const cors = require("cors");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const path = require("path");
+const foodRouter = require("./routes/Food.route");
+const { logger } = require("./middlewares/logEvents");
+const errorHandler = require("./middlewares/errorHandler");
 require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT || 2025;
+const PORT = process.env.PORT || 2025;
 
-app.use(cors());
+// Logging middleware
+app.use(logger);
+
+// Cross-Origin Resource Sharing (CORS) setup
+const whitelist = process.env.WHITELISTED_DOMAINS.split(",");
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (whitelist.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    optionsSuccessStatus: 200, // For legacy browser support
+  })
+);
+
+// built-in middleware for JSON and URL-encoded form data
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Mongoose setup
 const uri = process.env.MONGO_URI;
@@ -54,10 +76,10 @@ app.post("/upload", checkApiKey, upload.single("image"), (req, res) => {
 
 app.use("/image", express.static(process.env.IMAGE_LOCATION));
 
-const foodRouter = require("./routes/Food.route");
-
 app.use("/food", checkApiKey, foodRouter);
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
