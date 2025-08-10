@@ -65,6 +65,8 @@ app.post("/upload", checkApiKey, upload.single("image"), (req, res) => {
 
 app.use("/image", express.static(process.env.IMAGE_LOCATION));
 
+// Routes
+app.use("/register", require("./routes/register"));
 app.use("/food", checkApiKey, foodRouter);
 
 app.use(errorHandler);
