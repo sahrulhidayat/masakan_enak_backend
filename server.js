@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const corsOptions = require("./config/corsOptions");
 const { default: mongoose } = require("mongoose");
 const multer = require("multer");
 const path = require("path");
@@ -15,19 +16,7 @@ const PORT = process.env.PORT || 2025;
 app.use(logger);
 
 // Cross-Origin Resource Sharing (CORS) setup
-const whitelist = process.env.WHITELISTED_DOMAINS.split(",");
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (whitelist.indexOf(origin) !== -1 || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    optionsSuccessStatus: 200, // For legacy browser support
-  })
-);
+app.use(cors(corsOptions));
 
 // built-in middleware for JSON and URL-encoded form data
 app.use(express.json());
