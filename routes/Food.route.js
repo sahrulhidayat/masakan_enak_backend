@@ -1,9 +1,8 @@
 const router = require("express").Router();
 const Food = require("../models/Food.model");
-const verifyJWT = require("../middlewares/verifyJWT");
 
 // Get all food items
-router.route("/").get(verifyJWT, (req, res) => {
+router.route("/").get((req, res) => {
   Food.find()
     .then((food) => res.json(food))
     .catch((err) => res.status(400).json("Error: " + err));

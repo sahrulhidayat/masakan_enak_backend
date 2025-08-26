@@ -1,9 +1,9 @@
-import { compare } from "bcrypt";
+const bcrypt = require("bcrypt");
 
-import { sign } from "jsonwebtoken";
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
-import { promises as fsPromises } from "fs";
-import { join } from "path";
+const fsPromises = require("fs").promises;
+const path = require("path");
 
 // Mock database for users
 const usersDB = {
@@ -30,27 +30,27 @@ const handleLogin = async (req, res) => {
     }
 
     // Verify password
-    const isPasswordValid = await compare(password, foundUser.password);
+    const isPasswordValid = await bcrypt.compare(password, foundUser.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     // Create JWT token
-    const accessToken = sign(
+    const accessToken = jwt.sign(
       { username: foundUser.username },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "1h" }
     );
 
     //create refresh token
-    const refreshToken = sign(
+    const refreshToken = jwt.sign(
       { username: foundUser.username },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "7d" }
     );
 
     // Save the refresh token in the user's data
-    const otherUsers = users.filter(
+    const otherUsers = usersDB.users.filter(
       (user) => user.username !== foundUser.username
     );
     const currentUser = {
@@ -59,8 +59,8 @@ const handleLogin = async (req, res) => {
     };
     usersDB.setUsers([...otherUsers, currentUser]);
     await fsPromises.writeFile(
-      join(__dirname, "../data/users.json"),
-      JSON.stringify(users)
+      path.join(__dirname, "../data/users.json"),
+      JSON.stringify(usersDB.users)
     );
 
     res.cookie("jwt", refreshToken, {
@@ -74,4 +74,4 @@ const handleLogin = async (req, res) => {
   }
 };
 
-export default { handleLogin };
+module.exports = { handleLogin };

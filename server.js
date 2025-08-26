@@ -8,6 +8,7 @@ const foodRouter = require("./routes/Food.route");
 const { logger } = require("./middlewares/logEvents");
 const errorHandler = require("./middlewares/errorHandler");
 require("dotenv").config();
+const verifyJWT = require("./middlewares/verifyJWT");
 
 const app = express();
 const PORT = process.env.PORT || 2025;
@@ -33,14 +34,14 @@ connection.once("open", () => {
 });
 
 // Middleware to check API key
-function checkApiKey(req, res, next) {
-  const apiKey = req.header("x-api-key");
-  if (apiKey && apiKey === process.env.API_KEY) {
-    next();
-  } else {
-    res.status(401).json({ error: "Unauthorized" });
-  }
-}
+// function checkApiKey(req, res, next) {
+//   const apiKey = req.header("x-api-key");
+//   if (apiKey && apiKey === process.env.API_KEY) {
+//     next();
+//   } else {
+//     res.status(401).json({ error: "Unauthorized" });
+//   }
+// }
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -54,7 +55,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.post("/upload", checkApiKey, upload.single("image"), (req, res) => {
+app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
@@ -67,7 +68,9 @@ app.use("/image", express.static(process.env.IMAGE_LOCATION));
 
 // Routes
 app.use("/register", require("./routes/register"));
-app.use("/food", checkApiKey, foodRouter);
+app.use("/auth", require("./routes/auth"));
+app.use(verifyJWT);
+app.use("/food" , foodRouter);
 
 app.use(errorHandler);
 
